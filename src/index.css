@@ -1,0 +1,145 @@
+@import "tailwindcss";
+
+@theme {
+  --color-void: #020305;
+  --color-surface: rgb(7 10 16 / 0.62);
+  --color-edge: #1e2838;
+  --color-risk: #ff3b57;
+  --color-signal: #3aa0ff;
+  --color-gold: #ffae1f;
+  --color-up: #1fe0a0;
+  --color-ink: #e9eef7;
+  --color-mute: #7c89a3;
+
+  --font-display: "Barlow Condensed", sans-serif;
+  --font-body: "Inter", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-void);
+  color: var(--color-ink);
+  font-family: var(--font-body);
+}
+
+/* terminal look: sharper corners, glassy panels, steady digits */
+.font-display {
+  font-variant-numeric: tabular-nums;
+}
+.bg-surface {
+  backdrop-filter: blur(5px);
+}
+.rounded-xl {
+  border-radius: 6px;
+}
+.rounded-2xl {
+  border-radius: 8px;
+}
+
+/* ticker tape */
+@keyframes ticker {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.animate-ticker {
+  animation: ticker 60s linear infinite;
+}
+
+/* drifting grid */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(58, 160, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(58, 160, 255, 0.045) 1px, transparent 1px);
+  background-size: 56px 56px;
+  animation: grid-drift 24s linear infinite;
+}
+@keyframes grid-drift {
+  from { background-position: 0 0; }
+  to { background-position: 56px 56px; }
+}
+
+/* blinking terminal cursor */
+@keyframes blink {
+  50% { opacity: 0; }
+}
+.animate-blink {
+  animation: blink 1.1s steps(1) infinite;
+}
+
+/* CRT scanlines + a slow light sweep */
+.scanlines {
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.025) 0,
+    rgba(255, 255, 255, 0.025) 1px,
+    transparent 1px,
+    transparent 3px
+  );
+}
+.sweep::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -22vh;
+  height: 22vh;
+  background: linear-gradient(to bottom, transparent, rgba(255, 174, 31, 0.06), transparent);
+  animation: sweep 9s linear infinite;
+}
+@keyframes sweep {
+  to { transform: translateY(145vh); }
+}
+
+/* rotating light around the leader's row */
+@property --angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes spin-angle {
+  to { --angle: 360deg; }
+}
+.leader-ring::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(from var(--angle), transparent 0 68%, #ffae1f 86%, transparent 100%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: spin-angle 4s linear infinite;
+  pointer-events: none;
+}
+/* last-10-seconds heartbeat */
+@keyframes heartbeat {
+  0%, 100% { opacity: 0.25; }
+  15% { opacity: 1; }
+  30% { opacity: 0.35; }
+  45% { opacity: 1; }
+  60% { opacity: 0.25; }
+}
+.animate-heartbeat {
+  animation: heartbeat 1s ease-in-out infinite;
+}
+/* classy glass panel: soft gradient, thin blue edge, gold highlight line on top */
+.panel-glass {
+  position: relative;
+  background: linear-gradient(180deg, rgba(16, 24, 40, 0.74), rgba(7, 10, 16, 0.62));
+  border: 1px solid rgba(58, 160, 255, 0.18);
+  border-radius: 10px;
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.02) inset,
+    0 18px 40px -18px rgba(0, 0, 0, 0.85),
+    0 0 28px -14px rgba(58, 160, 255, 0.35);
+  backdrop-filter: blur(8px);
+}
+.panel-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 174, 31, 0.7), transparent);
+}
