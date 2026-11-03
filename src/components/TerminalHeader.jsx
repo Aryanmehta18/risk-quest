@@ -1,6 +1,6 @@
 export default function TerminalHeader({ frozen, caseLabel }) {
   return (
-    <header className="mb-8 flex items-end justify-between gap-6">
+    <header className="mb-5 flex items-end justify-between gap-6">
       <div>
         <p className="font-mono text-[11px] uppercase tracking-[0.4em] text-signal">Risk Desk</p>
         <h1 className="font-display text-5xl font-extrabold tracking-[0.06em] text-ink">

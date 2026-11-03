@@ -35,20 +35,20 @@ export default function ChartPanel({ ranked, liveLabel, intervalMs = 10000 }) {
 
   return (
     <div
-      className="panel-glass p-4"
+      className="panel-glass flex h-full flex-col p-5"
       onMouseEnter={() => setHold(true)}
       onMouseLeave={() => {
         setHold(false);
         setFocusId(null);
       }}
     >
-      <div className="mb-3 flex items-center justify-between">
+      <div className="mb-3 flex shrink-0 items-center justify-between">
         <div className="flex gap-1 rounded-full bg-white/5 p-1">
           {VIEWS.map((v, i) => (
             <button
               key={v.key}
               onClick={() => setView(i)}
-              className={`rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] transition ${
+              className={`rounded-full px-4 py-1.5 text-sm font-semibold uppercase tracking-[0.18em] transition ${
                 i === view ? "bg-signal/20 text-signal" : "text-mute hover:text-ink"
               }`}
             >
@@ -61,7 +61,7 @@ export default function ChartPanel({ ranked, liveLabel, intervalMs = 10000 }) {
         </span>
       </div>
 
-      <div className="mb-3 flex flex-wrap gap-1.5">
+      <div className="mb-3 flex shrink-0 flex-wrap gap-1.5">
         {ranked.map((t) => (
           <button
             key={t.id}
@@ -70,7 +70,7 @@ export default function ChartPanel({ ranked, liveLabel, intervalMs = 10000 }) {
               setSpotId(t.id);
               setView(2);
             }}
-            className="flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-semibold transition"
+            className="flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold transition"
             style={{
               borderColor: focusId === t.id ? t.color : "rgba(255,255,255,0.08)",
               color: focusId && focusId !== t.id ? "#7c89a3" : "#e9eef7",
@@ -83,9 +83,10 @@ export default function ChartPanel({ ranked, liveLabel, intervalMs = 10000 }) {
         ))}
       </div>
 
-      <div className="min-h-[290px]">
+      <div className="min-h-0 flex-1">
         <AnimatePresence mode="wait">
           <motion.div
+            className="h-full"
             key={key + (key === "radar" ? spotlight.id : "")}
             initial={{ opacity: 0, y: 10, filter: "blur(4px)" }}
             animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
@@ -99,7 +100,7 @@ export default function ChartPanel({ ranked, liveLabel, intervalMs = 10000 }) {
         </AnimatePresence>
       </div>
 
-      <div className="mt-3 h-px w-full bg-white/5">
+      <div className="mt-3 h-px w-full shrink-0 bg-white/5">
         <motion.div
           key={`${view}-${hold}`}
           className="h-px bg-gold/70"

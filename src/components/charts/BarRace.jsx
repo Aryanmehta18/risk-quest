@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 export default function BarRace({ teams, focusId, onFocus }) {
   const max = Math.max(...teams.map((t) => t.score), 1);
   return (
-    <div className="space-y-2.5 py-1">
+    <div className="flex h-full flex-col justify-around py-1">
       {teams.map((t, i) => (
         <motion.div
           key={t.id}
@@ -13,9 +13,9 @@ export default function BarRace({ teams, focusId, onFocus }) {
           transition={{ layout: { type: "spring", stiffness: 260, damping: 28 }, opacity: { duration: 0.2 } }}
           className="flex items-center gap-3"
         >
-          <span className="w-5 text-right font-mono text-[11px] text-mute">{t.rank}</span>
-          <span className="w-24 truncate text-xs font-semibold text-ink">{t.name}</span>
-          <div className="relative h-3.5 flex-1 overflow-hidden rounded-full bg-white/5">
+          <span className="w-6 text-right font-mono text-sm text-mute">{t.rank}</span>
+          <span className="w-28 truncate text-base font-semibold text-ink">{t.name}</span>
+          <div className="relative h-5 flex-1 overflow-hidden rounded-full bg-white/5">
             <motion.div
               className="h-full rounded-full"
               initial={{ width: 0 }}
@@ -27,7 +27,7 @@ export default function BarRace({ teams, focusId, onFocus }) {
               }}
             />
           </div>
-          <span className="w-10 text-right font-display text-sm font-bold text-gold">{t.score}</span>
+          <span className="w-10 text-right font-display text-xl font-bold text-gold">{t.score}</span>
         </motion.div>
       ))}
     </div>

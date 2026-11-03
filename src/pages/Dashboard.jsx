@@ -1,63 +1,45 @@
 import { useEffect, useState } from "react";
 import { rankTeams } from "../lib/rank";
+import { withRisk } from "../lib/risk";
 import { useGameState, useReady } from "../hooks/useGameState";
 import TeamCard from "../components/TeamCard";
-import RoundTimer from "../components/RoundTimer";
 import CaseSpotlight from "../components/CaseSpotlight";
 import Ticker from "../components/Ticker";
 import ChartPanel from "../components/ChartPanel";
 import FinalReveal from "../components/FinalReveal";
 import FocusView from "../components/FocusView";
-import GlobeBackground from "../components/GlobeBackground";
-import NetworkBackground from "../components/NetworkBackground";
 import TerminalHeader from "../components/TerminalHeader";
 import BootSplash from "../components/BootSplash";
 import OvertakeBanner from "../components/OvertakeBanner";
 import Countdown10 from "../components/Countdown10";
+import FinalHold from "../components/FinalHold";
+import { useTimerMs } from "../hooks/useTimerMs";
+import ScaledStage from "../components/ScaledStage";
 
-export default function Dashboard() {
-  const {
-    teams,
-    rounds,
-    events,
-    timer,
-    frozen,
-    snapshot,
-    finale,
-    focus,
-    qIndex = 0,
-    flash: rawFlash,
-  } = useGameState();
-  const ready = useReady();
+export function DashboardView({
+  teams, rounds, events, timer, frozen, snapshot, eventsSnapshot, finale, finalClosed, focus, qIndex = 0, flash: rawFlash,
+}) {
   const [banner, setBanner] = useState(null);
-  const [contagion, setContagion] = useState(0);
+  const { ms: timerMs } = useTimerMs(timer);
 
+  // while scores are frozen, teams, charts, risk levels and the risk feed all show the frozen moment
   const shown = frozen && snapshot ? snapshot : teams;
+  const feed = frozen && eventsSnapshot ? eventsSnapshot : events;
   const ranked = rankTeams(shown);
   const activeTeams = ranked.filter((t) => !t.eliminatedAfter);
   const maxScore = Math.max(1, ...activeTeams.map((t) => t.score));
-
-  const flash =
-    !frozen && rawFlash && Math.abs(Date.now() - rawFlash.key) < 8000 ? rawFlash : null;
+  // ratings and risk levels stay hidden until the first scores are in (frozen-aware: uses the frozen view)
+  const scoresStarted = ranked.some((t) => t.score !== 0);
+  const flash = !frozen && rawFlash && Math.abs(Date.now() - rawFlash.key) < 8000 ? rawFlash : null;
 
   // overtake detection: runs once per new score entry
   useEffect(() => {
     if (!flash || flash.type !== "score") return;
     const w = ranked.find((t) => t.id === flash.teamId);
     if (!w || w.eliminatedAfter || w.delta <= 0) return;
-    const loser = ranked.find(
-      (t) => t.id !== w.id && !t.eliminatedAfter && t.prevRank === w.rank
-    );
+    const loser = ranked.find((t) => t.id !== w.id && !t.eliminatedAfter && t.prevRank === w.rank);
     if (!loser) return;
-    setBanner({
-      key: flash.key,
-      winner: w.name,
-      loser: loser.name,
-      rank: w.rank,
-      from: w.prevRank,
-      color: w.color,
-      leader: w.rank === 1,
-    });
+    setBanner({ key: flash.key, winner: w.name, loser: loser.name, rank: w.rank, from: w.prevRank, color: w.color, leader: w.rank === 1 });
   }, [flash?.key]);
 
   useEffect(() => {
@@ -66,54 +48,64 @@ export default function Dashboard() {
     return () => clearTimeout(id);
   }, [banner]);
 
-  if (!ready) return <div className="min-h-screen bg-void" />;
-
-  // add ?bg=globe to the address to use the globe instead of the network
-  const bg = new URLSearchParams(window.location.search).get("bg");
-
   const liveIdx = rounds.findIndex((r) => r.status === "live");
   const liveRound = liveIdx >= 0 ? rounds[liveIdx] : null;
   const liveLabel = liveIdx >= 0 ? `R${liveIdx + 1} live` : "Final";
   const caseLabel = liveRound ? `CASE ${liveIdx + 1} · Q${qIndex + 1}` : "FINAL";
 
+  // "Updating final scores" holding screen: from the end of the last question of the last case
+  // (its timer reaches 0, or every case is marked done) until the admin starts the final reveal.
+  const lastQuestionOver =
+    liveIdx >= 0 && liveIdx === rounds.length - 1 &&
+    qIndex >= (liveRound.questions?.length || 1) - 1 &&
+    timer.status === "running" && timerMs === 0;
+  const allCasesDone = rounds.length > 0 && rounds.every((r) => r.status === "done");
+  const holding = !finale?.active && !finalClosed && (allCasesDone || lastQuestionOver);
+
   return (
-    <div className="bg-grid relative min-h-screen overflow-hidden bg-void px-8 pb-24 pt-6">
-      {bg === "globe" ? <GlobeBackground /> : <NetworkBackground onStat={setContagion} />}
-
-      {/* vignette, scanlines and a slow sweep for the terminal feel */}
-      <div className="pointer-events-none fixed inset-0 z-[5] bg-[radial-gradient(ellipse_at_50%_45%,transparent_45%,rgba(0,0,0,0.78)_100%)]" />
-      <div className="scanlines sweep pointer-events-none fixed inset-0 z-20 overflow-hidden" />
-
-      <div className="relative z-10">
-        <TerminalHeader
-          frozen={frozen}
-          caseLabel={caseLabel}
-          contagion={bg === "globe" ? undefined : contagion}
-        />
-
-        <main className="grid gap-6 lg:grid-cols-[2fr_1fr]">
-          <section className="space-y-3">
-            {ranked.map((team, i) => (
-              <TeamCard key={team.id} team={team} index={i} flash={flash} maxScore={maxScore} />
-            ))}
-          </section>
-
-          <aside className="space-y-6">
-            {liveRound && <CaseSpotlight round={liveRound} qIndex={qIndex} />}
-            <RoundTimer timer={timer} />
-            <ChartPanel ranked={activeTeams} liveLabel={liveLabel} />
-          </aside>
-        </main>
-      </div>
+    <>
+      <ScaledStage>
+        <div className="relative flex h-full w-full flex-col px-10 pb-[84px] pt-8">
+          <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+            <TerminalHeader frozen={frozen} caseLabel={caseLabel} />
+            <main className="grid min-h-0 flex-1 grid-cols-[1180px_1fr] gap-8">
+              <section
+                className="grid min-h-0 gap-2.5"
+                style={{ gridTemplateRows: `repeat(${ranked.length}, minmax(0, 1fr))` }}
+              >
+                {withRisk(ranked).map((team, i) => (
+                  <TeamCard key={team.id} team={team} index={i} flash={flash} maxScore={maxScore} showRatings={scoresStarted} />
+                ))}
+              </section>
+              <aside className="flex min-h-0 flex-col gap-5">
+                {liveRound && (
+                  <div className="shrink-0">
+                    <CaseSpotlight round={liveRound} qIndex={qIndex} />
+                  </div>
+                )}
+                <div className="min-h-0 flex-1">
+                  <ChartPanel ranked={activeTeams} liveLabel={liveLabel} />
+                </div>
+              </aside>
+            </main>
+          </div>
+        </div>
+        <Ticker events={feed} frozen={frozen} />
+      </ScaledStage>
 
       <OvertakeBanner banner={banner} />
-      {focus?.on && liveRound && (
-        <FocusView round={liveRound} qIndex={qIndex} timer={timer} size={focus.size ?? 1} />
-      )}
+      {holding && <FinalHold />}
+      {!holding && focus?.on && liveRound && <FocusView round={liveRound} qIndex={qIndex} timer={timer} size={focus.size ?? 1} />}
       <Countdown10 timer={timer} />
       {finale?.active && <FinalReveal finale={finale} teams={teams} />}
-      <Ticker events={events} />
       <BootSplash />
-    </div>
+    </>
   );
+}
+
+export default function Dashboard() {
+  const state = useGameState();
+  const ready = useReady();
+  if (!ready) return <div className="fixed inset-0 bg-void" />;
+  return <DashboardView {...state} />;
 }

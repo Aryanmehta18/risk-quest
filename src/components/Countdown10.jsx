@@ -1,18 +1,12 @@
-import { useEffect, useState } from "react";
+import { useTimerMs } from "../hooks/useTimerMs";
 import { AnimatePresence, motion } from "framer-motion";
 
 export default function Countdown10({ timer }) {
-  const [now, setNow] = useState(() => Date.now());
-
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 150);
-    return () => clearInterval(id);
-  }, []);
-
+  const { ms, end, now } = useTimerMs(timer, 150);
   const running = timer.status === "running";
-  const remaining = running ? Math.max(0, Math.ceil((timer.endsAt - now) / 1000)) : 0;
+  const remaining = running ? Math.ceil(ms / 1000) : 0;
   const urgent = running && remaining >= 1 && remaining <= 10;
-  const sinceEnd = now - timer.endsAt;
+  const sinceEnd = running ? now - end : -1;
   const boom = running && sinceEnd >= 0 && sinceEnd < 2600;
 
   return (

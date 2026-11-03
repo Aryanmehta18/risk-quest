@@ -8,8 +8,8 @@ export default function TeamRadar({ team, teams }) {
     avg: +(teams.reduce((s, t) => s + (criteriaScores[t.id]?.[i] ?? 0), 0) / teams.length).toFixed(1),
   }));
   return (
-    <div>
-      <div className="flex items-center justify-center gap-4 text-xs">
+    <div className="flex h-full flex-col">
+      <div className="flex shrink-0 items-center justify-center gap-4 text-xs">
         <span className="font-display text-base font-bold" style={{ color: team.color }}>
           {team.name}
         </span>
@@ -17,7 +17,8 @@ export default function TeamRadar({ team, teams }) {
           <span style={{ color: team.color }}>━</span> team &nbsp; <span>┅</span> field average
         </span>
       </div>
-      <ResponsiveContainer width="100%" height={260}>
+      <div className="min-h-0 flex-1">
+      <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={data} outerRadius="70%">
           <defs>
             <radialGradient id="radarFill">
@@ -26,7 +27,7 @@ export default function TeamRadar({ team, teams }) {
             </radialGradient>
           </defs>
           <PolarGrid stroke="rgba(255,255,255,0.08)" />
-          <PolarAngleAxis dataKey="criterion" tick={{ fill: "#e9eef7", fontSize: 11 }} />
+          <PolarAngleAxis dataKey="criterion" tick={{ fill: "#e9eef7", fontSize: 14 }} />
           <PolarRadiusAxis domain={[0, 10]} tick={false} axisLine={false} />
           <Radar dataKey="avg" stroke="#7c89a3" strokeDasharray="4 4" fill="none" animationDuration={900} />
           <Radar
@@ -40,6 +41,7 @@ export default function TeamRadar({ team, teams }) {
           />
         </RadarChart>
       </ResponsiveContainer>
+      </div>
     </div>
   );
 }

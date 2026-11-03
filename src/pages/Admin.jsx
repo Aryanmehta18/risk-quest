@@ -404,8 +404,9 @@ function Panel() {
             {!finale?.active ? (
               <>
                 <p className="mb-4 text-sm text-mute">
-                  Opens the full-screen reveal on the public screen. You then reveal each place
-                  yourself, from last to first.
+                  After the last question the public screen shows "Updating final scores". Press the
+                  green button when you are ready: it opens the full-screen reveal, and you then
+                  reveal each place yourself, from last to first.
                 </p>
                 <button
                   onClick={() => {
@@ -415,9 +416,9 @@ function Panel() {
                       game.startFinale();
                   }}
                   disabled={!allDone}
-                  className="w-full rounded-lg bg-gold/20 px-4 py-3 font-display text-lg font-bold text-gold transition hover:bg-gold/30 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="w-full rounded-lg border border-up/50 bg-up/20 px-4 py-3 font-display text-lg font-bold text-up transition hover:bg-up/30 disabled:cursor-not-allowed disabled:border-transparent disabled:bg-edge disabled:text-mute disabled:opacity-60"
                 >
-                  START FINAL REVEAL
+                  ✓ GREEN SIGNAL: REVEAL WINNERS
                 </button>
                 {!allDone && (
                   <p className="mt-2 text-xs text-mute">
@@ -496,7 +497,7 @@ function SetupSection({ teams, rounds }) {
     .map((c) => c.questions.length)
     .join("/")} questions`;
 
-  const load = () => {
+  const load = async () => {
     if (!armed) {
       setArmed(true);
       setTimeout(() => setArmed(false), 4000);
@@ -507,7 +508,7 @@ function SetupSection({ teams, rounds }) {
       if (typeof game.importQuestions !== "function") {
         throw new Error("importQuestions is missing in store.js");
       }
-      game.importQuestions();
+      await game.importQuestions();
       setMsg(`✓ Loaded: ${fileInfo}`);
     } catch (e) {
       setMsg(`✗ ${e.message}`);

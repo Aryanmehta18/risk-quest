@@ -30,11 +30,11 @@ export default function RaceChart({ teams, liveLabel, focusId }) {
   const order = [...teams].sort((a, b) => (a.id === focusId) - (b.id === focusId));
 
   return (
-    <ResponsiveContainer width="100%" height={290}>
+    <ResponsiveContainer width="100%" height="100%">
       <LineChart data={rows} margin={{ top: 10, right: 16, left: -14, bottom: 0 }}>
         <CartesianGrid stroke="rgba(255,255,255,0.05)" vertical={false} />
-        <XAxis dataKey="round" stroke="#7c89a3" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-        <YAxis stroke="#7c89a3" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
+        <XAxis dataKey="round" stroke="#7c89a3" tick={{ fontSize: 13 }} tickLine={false} axisLine={false} />
+        <YAxis stroke="#7c89a3" tick={{ fontSize: 13 }} tickLine={false} axisLine={false} />
         <Tooltip
           content={<Tip teams={teams} />}
           cursor={{ stroke: "rgba(255,174,31,0.4)", strokeDasharray: "4 4" }}

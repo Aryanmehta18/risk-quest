@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { motion } from "framer-motion";
 import FormattedContext from "./FormattedContext";
 import { useFitText } from "../hooks/useFitText";
+import { useTimerMs } from "../hooks/useTimerMs";
 
 const pad = (n) => String(n).padStart(2, "0");
 
@@ -10,17 +11,11 @@ const pad = (n) => String(n).padStart(2, "0");
 const CONTEXT_MAX_PX = [26, 34, 44, 56];
 
 export default function FocusView({ round, qIndex, timer, size = 1 }) {
-  const [now, setNow] = useState(() => Date.now());
   const boxRef = useRef(null);
   const textRef = useRef(null);
 
-  useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 250);
-    return () => clearInterval(id);
-  }, []);
-
   const running = timer.status === "running";
-  const ms = Math.max(0, running ? timer.endsAt - now : timer.remainingMs);
+  const { ms } = useTimerMs(timer, 250);
   const remaining = Math.ceil(ms / 1000);
   const mins = Math.floor(remaining / 60);
   const secs = remaining % 60;

@@ -1,7 +1,6 @@
 import { supabase } from "./supabase";
 import { teams as seedTeams, rounds as seedRounds } from "../data/teams";
 import { rankTeams } from "./rank";
-import { questionBank } from "../data/questions";
 const GAME_ID = "main";
 const DEFAULT_SECONDS = 10 * 60;
 
@@ -265,11 +264,11 @@ export function eliminateBottom(count = 2) {
 
 export function freeze() {
   if (state.frozen) return;
-  commit({ ...state, frozen: true, snapshot: state.teams });
+  commit({ ...state, frozen: true, snapshot: state.teams, eventsSnapshot: state.events });
 }
 
 export function reveal() {
-  commit({ ...state, frozen: false, snapshot: null });
+  commit({ ...state, frozen: false, snapshot: null, eventsSnapshot: null });
 }
 
 /* ---------- Final reveal ---------- */
@@ -289,7 +288,7 @@ export function revealNext() {
 }
 
 export function closeFinale() {
-  commit({ ...state, finale: null });
+  commit({ ...state, finale: null, finalClosed: true });
 }
 
 /* ---------- Setup: names, members, cases, questions ---------- */
@@ -345,7 +344,13 @@ export function startNewGame() {
 /* ---------- Zoom (focus) mode ---------- */
 
 export function setFocus(on) {
-  commit({ ...state, focus: { size: 1, ...(state.focus || {}), on } });
+  // opening the zoom view also starts (or resumes) the timer, exactly as the admin set it
+  let timer = state.timer;
+  if (on && timer.status !== "running") {
+    const ms = timer.remainingMs > 0 ? timer.remainingMs : timer.durationSec * 1000;
+    timer = { ...timer, status: "running", endsAt: Date.now() + ms, remainingMs: ms };
+  }
+  commit({ ...state, timer, focus: { size: 1, ...(state.focus || {}), on } });
 }
 
 // size: 0 (smaller) to 3 (biggest)
@@ -353,13 +358,10 @@ export function setFocusSize(size) {
   const s = Math.min(3, Math.max(0, size));
   commit({ ...state, focus: { on: false, ...(state.focus || {}), size: s } });
 }
-export const bankPreview = () =>
-  `${questionBank[0]?.caseTitle} · ${questionBank.length} cases · ${questionBank
-    .map((c) => c.questions.length)
-    .join("/")} questions`;
-
 // Overwrite every case's title, company and questions from src/data/questions.js
-export function importQuestions() {
+export async function importQuestions() {
+  // loaded only when an organizer presses the button, so the public dashboard never downloads the questions
+  const { questionBank } = await import("../data/questions");
   const rounds = state.rounds.map((r, i) => {
     const b = questionBank[i];
     if (!b) return r;
